@@ -51,10 +51,12 @@ def index2():
 @app.route('/ejercicio3', methods=['POST'])
 def index3():
     var = request.json['nombre']
-    var2 = request.json['data']
-    array = base64.b64decode(data)
-
-
+    data = request.json['data']
+    array = base64.standard_b64decode(data)
+    width = int.from_bytes(array[0x12:0x16], byteorder="little", signed=False) #
+    height = int.from_bytes(array[0x16:0x19], byteorder="little", signed=False) #
+    bitsp = array[0x1C] # 32 bits
+    print(width, height, bitsp)
     return "Hello, World!"
 
 @app.route('/ejercicio4', methods=['POST'])
