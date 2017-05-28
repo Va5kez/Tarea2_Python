@@ -53,14 +53,19 @@ def index3():
     var = request.json['nombre']
     data = request.json['data']
     array = base64.standard_b64decode(data)
-    width = int.from_bytes(array[0x12:0x16], byteorder="little", signed=False) #
-    height = int.from_bytes(array[0x16:0x19], byteorder="little", signed=False) #
-    bitsp = array[0x1C] # 32 bits
-    print(width, height, bitsp)
     return "Hello, World!"
 
 @app.route('/ejercicio4', methods=['POST'])
 def index4():
+    var = request.json['nombre']
+    data = request.json['data']
+    height = request.json['tamaño']['alto']
+    width = request.json['tamaño']['ancho']
+    array = base64.standard_b64decode(data) #
+    wid = int.from_bytes(array[0x12:0x16], byteorder="little", signed=False) # Image Width
+    hei = int.from_bytes(array[0x16:0x19], byteorder="little", signed=False) # Image Height
+    bitsp = array[0x1C] # 32 bits
+    print(wid, hei, bitsp)
     return "Hello, World!"
 
 @app.errorhandler(400)
@@ -70,18 +75,6 @@ def not_found(error):
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'El path no existe'}), 404)
-
-
-
-
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
