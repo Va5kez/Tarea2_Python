@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, make_response, request
 import requests, json, collections, base64
+from PIL import Image
+from io import BytesIO
 
 app = Flask(__name__)
 
 @app.route('/ejercicio1', methods=['POST'])
-def index1():
+def direccion():
     var = request.json['origen']
     var2 = request.json['destino']
     url = "https://maps.googleapis.com/maps/api/directions/json?origin="+var+"&destination="+var2+"&key=AIzaSyDcONfTyjtc5vBc4xoIMKOVtDPYA5VXkjk"
@@ -23,7 +25,7 @@ def index1():
     return json.dumps(cor, indent=3)
 
 @app.route('/ejercicio2', methods=['POST'])
-def index2():
+def places():
     var = request.json['origen']
     url = "https://maps.googleapis.com/maps/api/geocode/json?address="+var+"&key=AIzaSyABw1fPmzlTyeKS54b70u2hejFO0leai8I"
     res = requests.post(url, None)
@@ -49,14 +51,50 @@ def index2():
     return json.dumps(cor, indent=3)
 
 @app.route('/ejercicio3', methods=['POST'])
-def index3():
-    var = request.json['nombre']
+def Back_and_White():
+    nombre = request.json['nombre']
     data = request.json['data']
-    array = base64.standard_b64decode(data)
-    return "Hello, World!"
+
+    image = Image.open(BytesIO(base64.b64decode(data)))
+    width, height = image.size
+
+    BWImage = Image.new('RGB', (width,height))
+    pixels = BWImage.load()
+
+    for x in range(width):
+        for y in range(height):
+            pixel = image.getpixel((x,y))
+            R,G,B = pixel
+            color = 0.21*R+0.72*G+0.07*B
+
+            R = int(color)
+            G = int(color)
+            B = int(color)
+
+            newPixel = R,G,B
+
+            BWImage.putpixel((x,y),(newPixel))
+
+    BWImage.save(nombre)
+    with open(nombre, "rb") as img:
+        Ndata = base64.b64encode(img.read())
+        data = str(Ndata)
+        data = data[2:-1]
+
+    array = nombre.split(".")
+    resp_json = "{\"nombre\": \""
+    resp_json += array[0]
+    resp_json += "(blanco y negro)."
+    resp_json += array[1]
+    resp_json += "\", \"data\": \""
+    resp_json += data
+    resp_json += "\"}"
+
+    return resp_json
+
 
 @app.route('/ejercicio4', methods=['POST'])
-def index4():
+def Resize():
     var = request.json['nombre']
     data = request.json['data']
     height = request.json['tamaño']['alto']
@@ -66,7 +104,7 @@ def index4():
     hei = int.from_bytes(array[0x16:0x19], byteorder="little", signed=False) # Image Height
     bitsp = array[0x1C] # 32 bits
     print(wid, hei, bitsp)
-    return "Hello, World!"
+    return "Coming Soon 99/99/9999"
 
 @app.errorhandler(400)
 def not_found(error):
@@ -76,5 +114,9 @@ def not_found(error):
 def not_found(error):
     return make_response(jsonify({'error': 'El path no existe'}), 404)
 
+@app.errorhandler(500)
+def not_found(error):
+    return make_response(jsonify({'error': 'No se especifico origen'}), 500)
+
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)
+    app.run(host='0.0.0.0',debug=True, port=8080)
